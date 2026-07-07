@@ -8,8 +8,8 @@ class edit_file:
                     print(f'{line_flw:>{add_line}}.{line_flw_all}')
                     line_flw += 1
         elif ' to ' in cmd:
+            print('==========FLW==========')
             try:
-                print('==========FLW==========')
                 line_flw_start, line_flw_end = cmd.split(' to ')
                 line_flw_start = int(line_flw_start) - 1
                 line_flw_end = int(line_flw_end)
@@ -21,6 +21,7 @@ class edit_file:
                 print('Error:Not found data')
             print('=======================')
         else:
+            print('==========FLW==========')
             try:
                 line_flw = int(cmd) - 1
                 print(f'Flw: {line_flw + 1}.{all_content[line_flw]}')
@@ -39,7 +40,7 @@ class edit_file:
         except ValueError:
             print('Error:Not found data')
         except Exception:
-            print(f'Error:Your text has only {len(all_content)}')
+            print(f'Error:Your text has only {len(all_content)} lines')
         print('=======================')
     def clr(cmd):
         global all_content
@@ -61,7 +62,7 @@ class edit_file:
                 except ValueError:
                     print('Error:Not found data')
                 except Exception:
-                    print(f'Error:Your text has only {len(all_content)}')
+                    print(f'Error:Your text has only {len(all_content)} lines')
             else:
                 try:
                     line_clr = int(cmd) - 1
@@ -69,7 +70,7 @@ class edit_file:
                 except ValueError:
                     print('Error:Please type number')
                 except Exception:
-                    print(f'Error:Your text has only {len(all_content)}')
+                    print(f'Error:Your text has only {len(all_content)} lines')
     def add(cmd):
         global all_content
         try:
@@ -84,7 +85,7 @@ class edit_file:
         try:
             line_lc = int(cmd) - 1
             if line_lc > len(all_content):
-                print(f'Error:Your text has {len(all_content)}')
+                print(f'Error:Your text has {len(all_content)} lines')
             while True:
                 text_lc = input(f'{line_lc + 1:>{add_line}}.')
                 if text_lc.strip() == '!exit':
@@ -92,7 +93,7 @@ class edit_file:
                 all_content.insert(line_lc,text_lc)
                 line_lc += 1
         except ValueError:
-            print('Error:Please type number')
+            print('Error:Not found data')
         print('=======================')
     def copy(cmd):
         global all_content,copy_var
@@ -142,7 +143,7 @@ class edit_file:
         except ValueError:
             print('Error:Not found replaced text')
         for line_replace in range(len(all_content)):
-            all_content[line_replace] = all_content[line_replace].replace(text,text_replace)
+            all_content[line_replace] = all_content[line_replace].replace(text,text_replace)                    
     def info():
         global all_content
         char = 0
@@ -194,9 +195,13 @@ class file_io:
             print(f'Error:Not found file {load_path}')
             print('========================')
 class term_display:
+    global all_content
     def clr(add_line):
         print('\n' * 200,flush = True)
         edit_file.flw('all',add_line)
+    def prt_all():
+        global all_content
+        print(all_content)
 class main:
     def edit(add_line,path_load):
         global all_content,load_path,copy_var
@@ -243,6 +248,7 @@ class main:
 !paste or !p [line] to paste data where you want
 !save [path] or nothing to save file (nothing that knows to save loaded file)
 !load [path] to load file
+?clr to clear screen
 =======================''')
                     elif cmd == 'info':
                         edit_file.info()
@@ -277,23 +283,31 @@ class main:
                             edit_file.paste(cmd[6:])
                         else:
                             edit_file.paste(cmd[1:])
+                    else:
+                        print('Error:Command not found')
                 elif line_input.strip().startswith('?'):
                     cmd_1 = line_input[1:].strip()
                     if cmd_1 == 'clr':
                         term_display.clr(add_line)
+                    elif cmd_1 == 'prt_all':
+                        term_display.prt_all()
+                    else:
+                        print('Error:Command not found')
                 else:
                     all_content.append(line_input)
             except KeyboardInterrupt:
-                force_exit = input('Want to save file after exit?(y/n):').strip()
+                force_exit = input('\n\n\nWant to save file after exit?(y/n):').strip()
                 if force_exit == 'y':
                     while True:
                         try:
                             path_exit = input('Path file:')
                             file_io.save(path_exit)
-                        except FileNotFoundError:
+                            break
+                        except BaseException:
                             print('Error:Path file not found')
+                            print('========================')
                 else:
-                        exit()
+                    break
     def read(path,add_line):
         print('==========READ==========')
         line = 1
@@ -327,6 +341,22 @@ class main:
             print('========================')
         except FileNotFoundError:
             print(f'Error:Path "{path}" not found')
+    def copy(cmd):
+        try:
+            path,copy_path = cmd.split(' to ')
+        except ValueError:
+            print('Error:Not found path')
+        try:
+            with open(path,'r',encoding = 'utf-8-sig') as f:
+                content = f.read()
+        except FileNotFoundError:
+            print('Error:Not found data')
+        try:
+            with open(copy_path,'w',encoding = 'utf-8') as f:
+                f.write(content)
+        except FileNotFoundError:
+            print('Error:Not found path')
+        print('Copy Completed')
     def set_var(var):
         global limit
         if var.startswith('limit'):
@@ -354,6 +384,7 @@ if __name__ == '__main__':
 edit [path] to edit file or create file
 read [path] to read and display file's content
 info [path] to show file's infomation
+copy [path to path need to copy] to copy file to file
 exit to exit program
 clr to clear terminal''')
             elif mode == 'clr':
@@ -370,8 +401,14 @@ clr to clear terminal''')
                 main.read(mode[5:],limit)
             elif mode.startswith('info'):
                 main.info(mode[5:])
+            elif mode.startswith('copy'):
+                main.copy(mode[5:])
             else:
                 print(f'Error:Not found command "{mode}"')
         except KeyboardInterrupt:
-            input('\n\n\nForce exit completed')
+            code = input('\n\n\nForce exit completed').lower()
+            if code == ' that is a suck editor':
+                for i in range(67):
+                    with open(f'suck_{i}.suck','w') as hole:
+                        hole.write('Idiot will type this.')
             exit()
